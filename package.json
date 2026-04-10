@@ -1,0 +1,20 @@
+{
+  "name": "photos-store-ap",
+  "version": "1.0.0",
+  "description": "A project to merch photos",
+  "homepage": "https://github.com/vladimirthx/photos-store-AP#readme",
+  "bugs": {
+    "url": "https://github.com/vladimirthx/photos-store-AP/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vladimirthx/photos-store-AP.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
