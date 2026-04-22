@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
-# sharp requires native libs
-RUN apk add --no-cache libc6-compat vips-dev
+# sharp requires native libs and build tools for compilation on Alpine
+RUN apk add --no-cache libc6-compat vips-dev build-base python3
 
 WORKDIR /app
 
