@@ -1,5 +1,7 @@
 FROM node:20-alpine
 
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 # Al estar dentro de la carpeta del servicio, el package.json está en la raíz del contexto

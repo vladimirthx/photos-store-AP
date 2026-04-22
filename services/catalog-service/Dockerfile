@@ -1,5 +1,8 @@
 FROM node:20-alpine
 
+# Prisma needs openssl to connect securely to the database
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 COPY package.json ./
