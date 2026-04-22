@@ -22,6 +22,6 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'auth-service' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Auth Service is running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Auth Service is running on port ${PORT} and listening on 0.0.0.0`);
 });

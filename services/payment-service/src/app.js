@@ -25,6 +25,6 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'payment-service' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Payment Service is running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Payment Service is running on port ${PORT} and listening on 0.0.0.0`);
 });
