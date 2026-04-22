@@ -10,5 +10,7 @@ const upload = multer({ storage });
 
 router.get('/photos', catalogController.listPhotos);
 router.post('/photos', verifyToken, verifyAdmin, upload.single('photo'), catalogController.uploadPhoto);
+router.put('/photos/:id', verifyToken, verifyAdmin, catalogController.updatePhoto);
+router.delete('/photos/:id', verifyToken, verifyAdmin, catalogController.deletePhoto);
 
 module.exports = router;

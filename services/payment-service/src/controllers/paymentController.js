@@ -4,24 +4,34 @@ const { generatePresignedUrl } = require('../services/s3Service');
 
 const createSession = async (req, res) => {
   try {
-    const { photoId } = req.body;
+    const { photoIds } = req.body;
     const userId = "guest-" + Date.now(); // Guest checkout
 
-    const photo = await prisma.photo.findUnique({ where: { id: photoId } });
-    if (!photo) {
-      return res.status(404).json({ error: 'Photo not found' });
+    if (!photoIds || !Array.isArray(photoIds) || photoIds.length === 0) {
+      return res.status(400).json({ error: 'No photos selected' });
     }
 
-    const session = await createCheckoutSession(photo, userId);
+    const photos = await prisma.photo.findMany({
+      where: { id: { in: photoIds } }
+    });
 
-    await prisma.transaction.create({
-      data: {
-        stripeSessionId: session.id,
-        userId: userId,
-        photoId: photo.id,
-        amount: photo.price,
-        status: 'pending'
-      }
+    if (photos.length !== photoIds.length) {
+      return res.status(404).json({ error: 'Some photos were not found' });
+    }
+
+    const session = await createCheckoutSession(photos, userId);
+
+    // Create a transaction for each photo
+    const transactions = photos.map(photo => ({
+      stripeSessionId: session.id,
+      userId: userId,
+      photoId: photo.id,
+      amount: photo.price,
+      status: 'pending'
+    }));
+
+    await prisma.transaction.createMany({
+      data: transactions
     });
 
     res.status(200).json({ sessionId: session.id, url: session.url });
@@ -45,7 +55,7 @@ const webhook = async (req, res) => {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
 
-    await prisma.transaction.update({
+    await prisma.transaction.updateMany({
       where: { stripeSessionId: session.id },
       data: { status: 'completed' }
     });
@@ -58,23 +68,36 @@ const getDownloadUrl = async (req, res) => {
   try {
     const { sessionId } = req.params;
 
-    const transaction = await prisma.transaction.findUnique({
+    const transactions = await prisma.transaction.findMany({
       where: { stripeSessionId: sessionId }
     });
 
-    if (!transaction) {
-      return res.status(404).json({ error: 'Transaction not found' });
+    if (!transactions || transactions.length === 0) {
+      return res.status(404).json({ error: 'Transactions not found' });
     }
 
-    if (transaction.status !== 'completed') {
-      return res.status(400).json({ error: 'Payment not completed' });
+    // Verify all are completed
+    const pendingTransactions = transactions.filter(t => t.status !== 'completed');
+    if (pendingTransactions.length > 0) {
+      return res.status(400).json({ error: 'Payment not completed or still processing' });
     }
 
-    const photo = await prisma.photo.findUnique({ where: { id: transaction.photoId } });
-    
-    const url = await generatePresignedUrl(photo.originalKey);
+    const photoIds = transactions.map(t => t.photoId);
+    const photos = await prisma.photo.findMany({
+      where: { id: { in: photoIds } }
+    });
 
-    res.status(200).json({ downloadUrl: url });
+    const downloadLinks = await Promise.all(
+      photos.map(async (photo) => {
+        const url = await generatePresignedUrl(photo.originalKey);
+        return {
+          title: photo.title,
+          url: url
+        };
+      })
+    );
+
+    res.status(200).json({ downloadLinks });
   } catch (error) {
     console.error('Get download URL error:', error);
     res.status(500).json({ error: 'Internal server error' });
