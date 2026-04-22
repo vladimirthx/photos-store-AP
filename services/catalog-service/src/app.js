@@ -1,8 +1,21 @@
+// Capture any uncaught errors and print them clearly
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('UNHANDLED REJECTION:', reason);
+  process.exit(1);
+});
+
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+console.log('Loading catalog routes...');
 const catalogRoutes = require('./routes/catalogRoutes');
+console.log('Routes loaded OK');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
