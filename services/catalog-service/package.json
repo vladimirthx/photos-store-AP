@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js",
+    "start": "npx prisma db push --schema=prisma/schema.prisma && node src/app.js",
     "dev": "nodemon src/app.js"
   },
   "dependencies": {
