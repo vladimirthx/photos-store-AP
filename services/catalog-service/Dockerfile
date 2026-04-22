@@ -1,7 +1,9 @@
-FROM node:20-alpine
+FROM node:20-slim
 
-# sharp requires native libs and build tools for compilation on Alpine
-RUN apk add --no-cache libc6-compat vips-dev build-base python3
+# Instalamos libvips para asegurar compatibilidad con sharp en Debian
+RUN apt-get update && apt-get install -y \
+    libvips-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
