@@ -9,12 +9,16 @@ const PORT = process.env.PORT || 3003;
 
 app.use(cors());
 
-// Webhook route needs raw body, so we mount it BEFORE express.json()
-app.use('/api/payment/webhook', express.raw({ type: 'application/json' }), require('./controllers/paymentController').webhook);
+// Webhook route needs raw body
+const WEBHOOK_PATH = process.env.WEBHOOK_PATH || '/api/payment/webhook';
+app.use(WEBHOOK_PATH, express.raw({ type: 'application/json' }), require('./controllers/paymentController').webhook);
+app.use('/webhook', express.raw({ type: 'application/json' }), require('./controllers/paymentController').webhook);
 
 app.use(express.json());
 
-app.use('/api/payment', paymentRoutes);
+const API_PREFIX = process.env.API_PREFIX || '/api/payment';
+app.use(API_PREFIX, paymentRoutes);
+app.use('/', paymentRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

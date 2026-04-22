@@ -10,7 +10,9 @@ const PORT = process.env.PORT || 3002;
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/catalog', catalogRoutes);
+const API_PREFIX = process.env.API_PREFIX || '/api/catalog';
+app.use(API_PREFIX, catalogRoutes);
+app.use('/', catalogRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

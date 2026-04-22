@@ -10,7 +10,12 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
+// Use prefix from env or default for local development
+const API_PREFIX = process.env.API_PREFIX || '/api/auth';
+app.use(API_PREFIX, authRoutes);
+
+// Also accept requests without prefix (for DO path routing)
+app.use('/', authRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
