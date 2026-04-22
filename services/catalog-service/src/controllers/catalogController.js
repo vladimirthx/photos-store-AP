@@ -1,4 +1,4 @@
-const sharp = require('sharp');
+const Jimp = require('jimp');
 const crypto = require('crypto');
 const prisma = require('../prismaClient');
 const { uploadToSpaces } = require('../services/s3Service');
@@ -14,31 +14,35 @@ const uploadPhoto = async (req, res) => {
     const fileId = crypto.randomUUID();
     const originalExtension = file.originalname.split('.').pop() || 'jpg';
     const originalKey = `originals/${fileId}.${originalExtension}`;
-    const watermarkKey = `public/${fileId}-watermark.webp`;
+    const watermarkKey = `public/${fileId}-watermark.jpg`;
 
-    // Safe SVG watermark that fits in most aspect ratios
-    const watermarkSvg = `
-      <svg width="400" height="150">
-        <style>
-          .title { fill: rgba(255, 255, 255, 0.6); font-size: 32px; font-weight: bold; font-family: sans-serif; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
-        </style>
-        <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" class="title">PREVISUALIZACIÓN</text>
-      </svg>
-    `;
+    // Process image and add text watermark using Jimp (pure JS, no native deps)
+    const image = await Jimp.read(file.buffer);
+    
+    // Resize to max width 800px
+    if (image.getWidth() > 800) {
+      image.resize(800, Jimp.AUTO);
+    }
 
-    const watermarkedBuffer = await sharp(file.buffer)
-      .resize({ width: 800 })
-      .composite([{ input: Buffer.from(watermarkSvg), gravity: 'center' }])
-      .webp({ quality: 60 })
-      .toBuffer();
+    // Load font and add watermark text
+    const font = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+    const text = 'PREVISUALIZACIÓN';
+    const textWidth = Jimp.measureText(font, text);
+    const textX = (image.getWidth() - textWidth) / 2;
+    const textY = image.getHeight() / 2 - 16;
 
-    // 2. Upload original (Private)
+    image.print(font, textX, textY, text);
+    image.quality(60);
+
+    const watermarkedBuffer = await image.getBufferAsync(Jimp.MIME_JPEG);
+
+    // Upload original (Private)
     await uploadToSpaces(file.buffer, originalKey, file.mimetype, false);
 
-    // 3. Upload watermarked (Public)
-    const watermarkedUrl = await uploadToSpaces(watermarkedBuffer, watermarkKey, 'image/webp', true);
+    // Upload watermarked (Public)
+    const watermarkedUrl = await uploadToSpaces(watermarkedBuffer, watermarkKey, 'image/jpeg', true);
 
-    // 4. Save to DB
+    // Save to DB
     const photo = await prisma.photo.create({
       data: {
         title,
@@ -61,11 +65,7 @@ const listPhotos = async (req, res) => {
     const photos = await prisma.photo.findMany({
       orderBy: { createdAt: 'desc' }
     });
-    
-    // We don't want to expose originalKey directly in the public list, 
-    // but admin might need it. For now, just return it if requested or filter in UI.
-    const isAdmin = req.user && req.user.role === 'ADMIN';
-    
+
     const safePhotos = photos.map(p => ({
       id: p.id,
       title: p.title,
@@ -86,14 +86,10 @@ const updatePhoto = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, price } = req.body;
-    
+
     const updated = await prisma.photo.update({
       where: { id },
-      data: {
-        title,
-        description,
-        price: parseFloat(price)
-      }
+      data: { title, description, price: parseFloat(price) }
     });
     res.status(200).json({ message: 'Photo updated successfully', photo: updated });
   } catch (error) {
@@ -106,7 +102,6 @@ const deletePhoto = async (req, res) => {
   try {
     const { id } = req.params;
     await prisma.photo.delete({ where: { id } });
-    // Note: We should ideally also delete from S3, but we keep it simple for now or implement S3 deletion
     res.status(200).json({ message: 'Photo deleted successfully' });
   } catch (error) {
     console.error('Delete error:', error);
@@ -114,9 +109,4 @@ const deletePhoto = async (req, res) => {
   }
 };
 
-module.exports = {
-  uploadPhoto,
-  listPhotos,
-  updatePhoto,
-  deletePhoto
-};
+module.exports = { uploadPhoto, listPhotos, updatePhoto, deletePhoto };

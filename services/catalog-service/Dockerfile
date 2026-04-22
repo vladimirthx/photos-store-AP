@@ -1,9 +1,4 @@
-FROM node:20-slim
-
-# Instalamos libvips para asegurar compatibilidad con sharp en Debian
-RUN apt-get update && apt-get install -y \
-    libvips-dev \
-    && rm -rf /var/lib/apt/lists/*
+FROM node:20-alpine
 
 WORKDIR /app
 
