@@ -16,7 +16,7 @@ export default function Success() {
       
       // Small delay to allow Stripe Webhook to process the completed status
       setTimeout(() => {
-        fetch(`http://localhost:3003/api/payment/download/${sessionId}`)
+        fetch(`${import.meta.env.VITE_PAYMENT_URL}/api/payment/download/${sessionId}`)
           .then(res => res.json())
           .then(data => {
             if (data.downloadLinks) {

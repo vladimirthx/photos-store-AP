@@ -1,12 +1,21 @@
-FROM node:18-alpine
+FROM node:20-alpine
+
+# sharp requires native libs
+RUN apk add --no-cache libc6-compat vips-dev
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+# Copy service-specific package files
+COPY services/catalog-service/package.json ./
+RUN npm install --omit=dev
 
-COPY . .
+# Copy Prisma schema and generate client
+COPY services/catalog-service/prisma ./prisma
+RUN npx prisma generate
 
-EXPOSE 3000
+# Copy service source code
+COPY services/catalog-service/src ./src
 
-CMD ["npm", "start"]
+EXPOSE 3002
+
+CMD ["node", "src/app.js"]

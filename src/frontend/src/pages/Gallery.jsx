@@ -7,7 +7,7 @@ export default function Gallery() {
   const { cart, addToCart } = useCart();
 
   useEffect(() => {
-    fetch('http://localhost:3002/api/catalog/photos')
+    fetch(`${import.meta.env.VITE_CATALOG_URL}/api/catalog/photos`)
       .then(res => res.json())
       .then(data => setPhotos(data))
       .catch(err => console.error(err));

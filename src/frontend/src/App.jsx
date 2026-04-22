@@ -14,7 +14,7 @@ const Navbar = () => {
   const handleCheckout = async () => {
     if (cart.length === 0) return;
     try {
-      const res = await fetch('http://localhost:3003/api/payment/create-checkout-session', {
+      const res = await fetch(`${import.meta.env.VITE_PAYMENT_URL}/api/payment/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ photoIds: cart.map(c => c.id) })

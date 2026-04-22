@@ -21,7 +21,7 @@ export default function Admin() {
 
   const fetchPhotos = async () => {
     try {
-      const res = await fetch('http://localhost:3002/api/catalog/photos');
+      const res = await fetch(`${import.meta.env.VITE_CATALOG_URL}/api/catalog/photos`);
       const data = await res.json();
       setPhotos(data);
     } catch (err) {
@@ -52,7 +52,7 @@ export default function Admin() {
     formData.append('photo', file);
 
     try {
-      const res = await fetch('http://localhost:3002/api/catalog/photos', {
+      const res = await fetch(`${import.meta.env.VITE_CATALOG_URL}/api/catalog/photos`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -78,7 +78,7 @@ export default function Admin() {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Seguro que deseas eliminar esta fotografía?')) return;
     try {
-      const res = await fetch(`http://localhost:3002/api/catalog/photos/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_CATALOG_URL}/api/catalog/photos/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -95,7 +95,7 @@ export default function Admin() {
 
   const handleSaveEdit = async (id) => {
     try {
-      const res = await fetch(`http://localhost:3002/api/catalog/photos/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_CATALOG_URL}/api/catalog/photos/${id}`, {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${token}`,

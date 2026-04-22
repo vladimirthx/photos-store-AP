@@ -20,8 +20,8 @@ const createCheckoutSession = async (photos, userId) => {
     payment_method_types: ['card'],
     line_items: lineItems,
     mode: 'payment',
-    success_url: `http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `http://localhost:5173/`,
+    success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/`,
     metadata: {
       userId: userId,
       photoIds: photos.map(p => p.id).join(','),
