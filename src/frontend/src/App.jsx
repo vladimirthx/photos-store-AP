@@ -30,7 +30,7 @@ const Navbar = () => {
     <>
       <nav className="navbar glass">
         <div className="navbar-brand">
-          <Link to="/">Aura Photography</Link>
+          <Link to="/">Angel Perez</Link>
         </div>
         <div className="nav-links">
           <Link to="/">Store</Link>
